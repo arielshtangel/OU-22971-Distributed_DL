@@ -1,0 +1,5 @@
+run_name,rank,role,pair_rank,local_batch_size,global_batch_size,global_views_per_step,avg_step_time_s,loss,images_per_second,max_parameter_difference_after_sync
+baseline_b1,0,stage0,1,1,2,4,1.269127,,3.146162,0.0000000000
+baseline_b1,1,stage1,0,1,2,4,1.239124,1.276096,3.146162,0.0000000000
+baseline_b1,2,stage0,3,1,2,4,1.271390,,3.146162,0.0000000000
+baseline_b1,3,stage1,2,1,2,4,1.235602,1.217547,3.146162,0.0000000000

@@ -1,0 +1,3 @@
+run_name,run_dir,local_batch_size,global_batch_size,images_per_second,max_stage0_step_s,max_stage1_step_s,communication_s,compute_s,diagnosis
+baseline_b1,outputs/baseline_b1,1,2,3.146162,1.27139,1.239124,8.246932,5.963379,communication_or_waiting_visible
+followup_b2,outputs/followup_b2,2,4,4.162466,1.921938,1.783636,11.325738,10.148387999999999,communication_or_waiting_visible

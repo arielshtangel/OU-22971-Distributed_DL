@@ -1,0 +1,41 @@
+{
+  "run_name": "baseline_b1",
+  "backend": "gloo",
+  "world_size": 4,
+  "dataset": "torchvision.datasets.FakeData",
+  "dataset_size": 64,
+  "seed": 22971,
+  "image_size": [
+    3,
+    224,
+    224
+  ],
+  "local_batch_size": 1,
+  "global_batch_size_source_images": 2,
+  "global_views_per_step": 4,
+  "steps": 3,
+  "profile": true,
+  "temperature": 0.2,
+  "embedding_dim": 128,
+  "learning_rate": 0.01,
+  "stage0_ranks": [
+    0,
+    2
+  ],
+  "stage1_ranks": [
+    1,
+    3
+  ],
+  "pair_groups": [
+    [
+      0,
+      1
+    ],
+    [
+      2,
+      3
+    ]
+  ],
+  "stage0_split": "conv1/bn1/relu/maxpool/layer1/layer2",
+  "stage1_split": "layer3/layer4/avgpool/flatten/projection_head"
+}

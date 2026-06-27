@@ -1,0 +1,20 @@
+{
+  "dataset": "torchvision.datasets.FakeData",
+  "dataset_size": 64,
+  "seed": 22971,
+  "image_size": [
+    3,
+    224,
+    224
+  ],
+  "num_classes": 1000,
+  "labels_used": false,
+  "positive_pair_views_per_source_image": 2,
+  "augmentations": [
+    "RandomResizedCrop(224)",
+    "RandomHorizontalFlip",
+    "ColorJitter",
+    "RandomGrayscale"
+  ],
+  "note": "FakeData is generated lazily and deterministically from the seed; this file records the workload configuration, not downloaded data."
+}
