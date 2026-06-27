@@ -46,8 +46,6 @@ Upload only the source files and final run artifacts needed to reproduce and dis
                 └── followup_b2_rank3.json     # profiler trace for rank 3, stage 1
 ```
 
-Do not upload temporary folders such as `__pycache__/`, `.ipynb_checkpoints/`, virtual environments, or smoke-test output directories such as `outputs/baseline_b1_smoke/` unless the instructor specifically asks for them.
-
 ## Codespaces Setup
 
 Open the repository in GitHub Codespaces, then run these commands from the repository root:
