@@ -112,8 +112,6 @@ Keep `NPROC_PER_NODE=4` for the capstone because the design document requires at
 
 ## Manual Step-By-Step Flow
 
-Use this section if you want to run each step separately for the video.
-
 ### 1. Data Preparation
 
 The workload uses deterministic `torchvision.datasets.FakeData`, so no real image files are downloaded. This command writes the metadata used by the runs:
@@ -291,13 +289,6 @@ The baseline used a smaller local batch size, so each distributed step had less 
 The follow-up kept the same distributed structure but increased `local_batch_size` from `1` to `2`. This gave each rank more useful compute per communication round. The traces still show communication or waiting, but the metric evidence shows that the larger batch size improved throughput.
 
 The diagnosis category for both runs was `communication_or_waiting_visible`. This means the system was not perfectly balanced: communication spans such as `recv_boundary`, `send_boundary`, `gather_embeddings`, `send_boundary_grad`, `recv_boundary_grad`, and `grad_sync_*` still matter. However, the follow-up was better because the additional compute improved overall images per second.
-
-For the video trace walkthrough, the most useful files are:
-
-```text
-solution/outputs/baseline_b1/traces/baseline_b1_rank1.json
-solution/outputs/followup_b2/traces/followup_b2_rank1.json
-```
 
 Rank 1 is a stage-1 rank, so it shows:
 
