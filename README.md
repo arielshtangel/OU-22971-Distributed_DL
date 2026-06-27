@@ -1,25 +1,56 @@
 # Distributed DL Capstone Solution
 
-This solution implements the required SimCLR-like distributed training system with a manually sharded ResNet18 encoder.
+This repository contains a script-based solution for the Torch Distributed capstone. The solution demonstrates distributed training with a manually sharded ResNet18 encoder, launched with `torchrun`.
 
-The main training logic is in `train_sharded_simclr.py` and is launched with `torchrun`. The submitted flow is script-based and starts from `run_codespaces_flow.sh`.
+The main training code is in `solution/train_sharded_simclr.py`. The normal Codespaces flow starts from `solution/run_codespaces_flow.sh`.
+
+## Repository Structure
+
+Upload only the source files and final run artifacts needed to reproduce and discuss the submission:
+
+```text
+/workspaces/OU-22971-Distributed_DL/
+├── design_doc.md                              # capstone design document
+├── README.md                                  # setup, run commands, and analysis
+└── solution/
+    ├── prepare_fake_data_metadata.py          # writes deterministic FakeData metadata
+    ├── train_sharded_simclr.py                # distributed sharded SimCLR training script
+    ├── summarize_runs.py                      # compares baseline and follow-up outputs
+    ├── run_codespaces_flow.sh                 # full Codespaces flow runner
+    ├── prepared/
+    │   └── dataset_metadata.json              # final data/workload metadata used by the runs
+    └── outputs/
+        ├── manual_batch_size_sweep.csv        # baseline vs follow-up comparison table
+        ├── diagnosis_summary.md               # combined diagnosis summary
+        ├── baseline_b1/
+        │   ├── run_config.json                # baseline run configuration
+        │   ├── communication_groups.json      # rank pairs and stage groups
+        │   ├── metrics.csv                    # per-rank performance metrics
+        │   ├── trace_summary.csv              # summarized profiler span timings
+        │   ├── diagnosis_summary.md           # baseline bottleneck diagnosis
+        │   └── traces/
+        │       ├── baseline_b1_rank0.json     # profiler trace for rank 0, stage 0
+        │       ├── baseline_b1_rank1.json     # profiler trace for rank 1, stage 1
+        │       ├── baseline_b1_rank2.json     # profiler trace for rank 2, stage 0
+        │       └── baseline_b1_rank3.json     # profiler trace for rank 3, stage 1
+        └── followup_b2/
+            ├── run_config.json                # follow-up run configuration
+            ├── communication_groups.json      # rank pairs and stage groups
+            ├── metrics.csv                    # per-rank performance metrics
+            ├── trace_summary.csv              # summarized profiler span timings
+            ├── diagnosis_summary.md           # follow-up bottleneck diagnosis
+            └── traces/
+                ├── followup_b2_rank0.json     # profiler trace for rank 0, stage 0
+                ├── followup_b2_rank1.json     # profiler trace for rank 1, stage 1
+                ├── followup_b2_rank2.json     # profiler trace for rank 2, stage 0
+                └── followup_b2_rank3.json     # profiler trace for rank 3, stage 1
+```
+
+Do not upload temporary folders such as `__pycache__/`, `.ipynb_checkpoints/`, virtual environments, or smoke-test output directories such as `outputs/baseline_b1_smoke/` unless the instructor specifically asks for them.
 
 ## Codespaces Setup
 
 Open the repository in GitHub Codespaces, then run these commands from the repository root:
-
-Repository layout used by this README:
-
-```text
-/workspaces/OU-22971-Distributed_DL/
-├── design_doc.md
-├── README.md
-└── solution/
-    ├── prepare_fake_data_metadata.py
-    ├── train_sharded_simclr.py
-    ├── summarize_runs.py
-    └── run_codespaces_flow.sh
-```
 
 ```bash
 cd solution
@@ -50,13 +81,14 @@ cd /workspaces/OU-22971-Distributed_DL/solution
 
 ## Full Codespaces Flow
 
-Run the full flow with one command:
+Run the full flow from the repository root with:
 
 ```bash
+cd solution
 bash run_codespaces_flow.sh
 ```
 
-This script runs the following four steps in order:
+The script runs four steps:
 
 1. prepare deterministic FakeData metadata
 2. run the baseline profiled distributed training job with local batch size 1
@@ -78,7 +110,7 @@ You can override them if Codespaces is slow:
 STEPS=2 DATASET_SIZE=32 bash run_codespaces_flow.sh
 ```
 
-Keep `NPROC_PER_NODE=4` for the capstone because the design doc requires at least four ranks.
+Keep `NPROC_PER_NODE=4` for the capstone because the design document requires at least four ranks.
 
 ## Manual Step-By-Step Flow
 
@@ -86,16 +118,17 @@ Use this section if you want to run each step separately for the video.
 
 ### 1. Data Preparation
 
-The workload uses deterministic `torchvision.datasets.FakeData`, so no real image files are downloaded. This command writes the metadata used by the run:
+The workload uses deterministic `torchvision.datasets.FakeData`, so no real image files are downloaded. This command writes the metadata used by the runs:
 
 ```bash
+cd solution
 python prepare_fake_data_metadata.py --dataset-size 64 --seed 22971 --output-dir prepared
 ```
 
 Output:
 
 ```text
-prepared/dataset_metadata.json
+solution/prepared/dataset_metadata.json
 ```
 
 ### 2. Baseline Run
@@ -110,6 +143,8 @@ torchrun --standalone --nproc_per_node=4 train_sharded_simclr.py \
   --run-name baseline_b1_smoke \
   --output-dir outputs/baseline_b1_smoke
 ```
+
+This smoke run checks that the distributed job works before collecting profiler traces. It is not required as a final output artifact.
 
 ### 3. Baseline Profiled Run
 
@@ -141,7 +176,7 @@ torchrun --standalone --nproc_per_node=4 train_sharded_simclr.py \
 
 ### 5. Sweep Summary
 
-After both runs finish:
+After both profiled runs finish:
 
 ```bash
 python summarize_runs.py \
@@ -152,8 +187,8 @@ python summarize_runs.py \
 This writes:
 
 ```text
-outputs/manual_batch_size_sweep.csv
-outputs/diagnosis_summary.md
+solution/outputs/manual_batch_size_sweep.csv
+solution/outputs/diagnosis_summary.md
 ```
 
 `global_batch_size` counts source images. `global_views_per_step` counts the two augmented views per source image. The reported `images/s` uses the augmented views because those are the images that actually pass through the sharded encoder.
@@ -213,7 +248,13 @@ The analysis uses the Unit 2 / Unit 3 vocabulary:
 
 ## Output Artifacts
 
-Each run directory contains:
+The `prepared/` directory contains the workload configuration:
+
+```text
+solution/prepared/dataset_metadata.json
+```
+
+Each final run directory contains:
 
 ```text
 run_config.json
@@ -230,17 +271,56 @@ traces/<run_name>_rank3.json
 The combined sweep output contains:
 
 ```text
-outputs/manual_batch_size_sweep.csv
-outputs/diagnosis_summary.md
+solution/outputs/manual_batch_size_sweep.csv
+solution/outputs/diagnosis_summary.md
 ```
 
-## Analysis And Discussion
+## Output Artifacts Analysis And Discussion
 
-The baseline run shows the starting balance between stage-0 compute, stage-1 compute, embedding gathering, loss calculation, gradient synchronization, and waiting.
+The final comparison is stored in `solution/outputs/manual_batch_size_sweep.csv`.
 
-The follow-up run increases local batch size. If `images/s` improves, the larger batch gave each rank more useful local work per synchronization. If `images/s` does not improve, the trace should show that loss-side work, embedding gathering, waiting, or memory pressure grew faster than useful compute.
+Observed run results:
 
-The decision is based on `images/s` first, then supported by per-rank step time and profiler span evidence.
+```text
+baseline_b1: local_batch_size=1, global_batch_size=2, images/s=3.15
+followup_b2: local_batch_size=2, global_batch_size=4, images/s=4.16
+```
+
+The follow-up improved throughput by about `1.02 images/s`.
+
+The baseline used a smaller local batch size, so each distributed step had less local compute. In that case, communication and waiting are easier to notice in the trace because every step still pays for boundary transfer, embedding gather, gradient return, and gradient synchronization.
+
+The follow-up kept the same distributed structure but increased `local_batch_size` from `1` to `2`. This gave each rank more useful compute per communication round. The traces still show communication or waiting, but the metric evidence shows that the larger batch size improved throughput.
+
+The diagnosis category for both runs was `communication_or_waiting_visible`. This means the system was not perfectly balanced: communication spans such as `recv_boundary`, `send_boundary`, `gather_embeddings`, `send_boundary_grad`, `recv_boundary_grad`, and `grad_sync_*` still matter. However, the follow-up was better because the additional compute improved overall images per second.
+
+For the video trace walkthrough, the most useful files are:
+
+```text
+solution/outputs/baseline_b1/traces/baseline_b1_rank1.json
+solution/outputs/followup_b2/traces/followup_b2_rank1.json
+```
+
+Rank 1 is a stage-1 rank, so it shows:
+
+- `recv_boundary`: stage 1 waits for activation from stage 0
+- `stage1_forward`: local compute in the second model shard
+- `gather_embeddings`: collective communication across stage-1 ranks
+- `loss_calculation`: SimCLR-style contrastive loss
+- `loss_backward`: local backward pass on stage 1
+- `send_boundary_grad`: returned boundary gradient sent back to stage 0
+- `grad_sync_stage1`: collective gradient synchronization
+
+A useful secondary trace pair is:
+
+```text
+solution/outputs/baseline_b1/traces/baseline_b1_rank0.json
+solution/outputs/followup_b2/traces/followup_b2_rank0.json
+```
+
+Rank 0 is a stage-0 rank, so it shows the other side of the pipeline: `stage0_forward`, `send_boundary`, `recv_boundary_grad`, `stage0_backward`, and `grad_sync_stage0`.
+
+The final tuning decision is to prefer the follow-up configuration, `local_batch_size=2`, because it produced higher throughput while preserving the same distributed model split and communication pattern.
 
 ## Optional Controller
 
