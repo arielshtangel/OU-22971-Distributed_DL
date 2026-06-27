@@ -12,6 +12,9 @@ Upload only the source files and final run artifacts needed to reproduce and dis
 /workspaces/OU-22971-Distributed_DL/
 ├── design_doc.md                              # capstone design document
 ├── README.md                                  # setup, run commands, and analysis
+├── deliverables_videos/                       
+│   ├── explanation_part1.mp4                  # Video walkthrough (1st part)
+│   └── explanation_part2.mp4                  # Video walkthrough (2nd part)
 └── solution/
     ├── prepare_fake_data_metadata.py          # writes deterministic FakeData metadata
     ├── train_sharded_simclr.py                # distributed sharded SimCLR training script
